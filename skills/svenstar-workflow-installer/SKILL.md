@@ -9,6 +9,7 @@ Use the bundled script for deterministic edits. It installs a dual-mode workflow
 
 - Light mode: small fixes use normal code edits, tests, git diff/commit messages; no task directory.
 - Long-task mode: large features use one `docs/develops/<date-slug>/` root directory. `docs/develops/current.json` can point either to that root or to a phase subdirectory such as `docs/develops/<date-slug>/<phase-slug>/`. Each active directory keeps its own `task.json` and `current.md`; completed tasks require git commits.
+- Candidate requirements and design drafts live in `docs/superpowers/`; they stay outside the development workflow until the user explicitly promotes one into `docs/develops/`.
 
 ## Commands
 

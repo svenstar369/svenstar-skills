@@ -138,7 +138,7 @@ docs/develops/
         "正常路径和空数据都有测试覆盖"
       ],
       "verification": [
-        "cd backend && ../.venv/bin/python -m pytest tests/test_collector_query.py"
+        "cd backend && .venv/bin/python -m pytest tests/test_collector_query.py"
       ],
       "steps": [
         "扩展 query service",
@@ -396,6 +396,8 @@ AGENTS_BLOCK = f"""{AGENTS_START}
 ## Svenstar Workflow Installer
 
 - 默认使用轻量模式：小修小改不创建开发目录，不写开发日志，必要记录交给 git diff / commit message。
+- `docs/superpowers/` 只用于存放尚未进入开发工作流的候选需求、设计草案、PRD 候选和点子；默认不读，只有用户明确点名或明确要推进为开发任务时才读取。
+- `docs/superpowers/` 中的内容只能视为候选方案，不得直接当作当前需求执行；要采纳时先按 `WORKFLOW.md` 固化范围，必要时迁入 `docs/develops/`。
 - 长任务模式按 `WORKFLOW.md` 执行：使用 `docs/develops/current.json` 定位活跃需求或阶段目录，并更新 `docs/develops/<active>/current.md`。
 - 如果用户没有明确要求长任务模式，但需求预计跨多个会话、超过 3 个可验证任务或跨前后端/API/数据库/架构，先询问是否进入长任务模式。
 - 长任务模式中 task 进入 `done` 后必须 git commit；阶段切换前如已有可验证成果，也要先 commit。
