@@ -37,11 +37,11 @@ WORKFLOW_MD = f"""# Task 工作流
 
 当用户要求先讨论、grill、brainstorming 或设计一个需求，但尚未明确要求开始开发时：
 
-- 可以先把确认后的需求分析 / 设计 / PRD 候选写到 `docs/superpowers/YYYY-MM-DD-<topic>-design.md`，内容尽量使用中文。
-- `docs/superpowers/` 只承载尚未进入开发工作流的候选规格，不维护任务状态、进度或验收日志。
-- 不因为写了 `docs/superpowers/` 文档就自动进入长任务模式，也不要自动创建 `docs/develops/<需求目录>/`。
-- 用户明确指定“开发这个需求”、要求按 `WORKFLOW.md` 执行，或确认进入长任务模式后，将对应候选规格移动到 `docs/develops/<需求目录>/prd.md`，作为该需求的 PRD / 设计依据。
-- 移动后，`docs/develops/<需求目录>/task.json` 承载任务状态，`current.md` 承载轻量接手上下文；不要继续在 `docs/superpowers/` 维护该需求的进度。
+- 可以先把确认后的需求分析 / 设计 / PRD 候选写到 `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md`，内容尽量使用中文；这是 brainstorming skill 的默认规格文档落点。
+- `docs/superpowers/specs/` 只承载尚未进入开发工作流的候选规格，不维护任务状态、进度或验收日志。
+- 不因为写了 `docs/superpowers/specs/` 文档就自动进入长任务模式，也不要自动创建 `docs/develops/<需求目录>/`。
+- 用户明确指定“开发这个需求”、要求按 `WORKFLOW.md` 执行，或确认进入长任务模式后，将对应候选规格内容复制到 `docs/develops/<需求目录>/prd.md`，作为该需求的 PRD / 设计依据。
+- 复制后，原 `docs/superpowers/specs/<spec>.md` 只保留指向 `docs/develops/<需求目录>/` 的引用；`docs/develops/<需求目录>/task.json` 承载任务状态，`current.md` 承载轻量接手上下文，不要继续在 `docs/superpowers/specs/` 维护该需求的进度。
 
 ## 轻量模式
 
@@ -111,7 +111,7 @@ docs/develops/
 文件职责：
 
 - `docs/develops/current.json`：唯一活跃目录指针。`active` 可以直接指向需求根目录，也可以指向 `<阶段>/` 子目录。
-- `docs/develops/<需求>/prd.md`：该需求的 PRD / 设计依据；若该需求从 `docs/superpowers/` 的候选规格进入开发，应由对应候选规格移动而来。
+- `docs/develops/<需求>/prd.md`：该需求的 PRD / 设计依据；若该需求从 `docs/superpowers/specs/` 的候选规格进入开发，应复制对应候选规格内容而来，原 spec 只保留到本需求目录的引用。
 - `docs/develops/<需求>/task.json`：需求根目录级任务状态机。适合记录跨阶段任务，或不拆阶段时直接使用。
 - `docs/develops/<需求>/current.md`：需求根目录级轻量 handoff。适合记录大需求的总目标、当前阶段入口或跨阶段约束。
 - `docs/develops/<需求>/<阶段>/task.json`：该阶段自己的任务状态机。阶段任务尽量留在阶段目录，不再为每个阶段新建平级需求目录。
@@ -393,19 +393,20 @@ CURRENT_TEMPLATE = """# Current
 
 SUPERPOWERS_README = """# Superpowers（候选需求与设计草案）
 
-本目录放有价值但尚未进入开发工作流的需求分析、设计草案、PRD 候选和点子。它们不是当前事实，也不是历史归档，而是将来也许会做的备选方案，或刚完成讨论但尚未启动开发的候选规格。
+本目录放有价值但尚未进入开发工作流的候选材料。需求分析、设计草案、PRD 候选和点子统一放在 `docs/superpowers/specs/`；它们不是当前事实，也不是历史归档，而是将来也许会做的备选方案，或刚完成讨论但尚未启动开发的候选规格。
 
 ## 规则
 
 - 默认不读：AI 默认不读本目录，只有用户明确点名某份文档时才读。
 - 不驱动开发：本目录内容不构成当前需求或契约；与 `memory-bank/` 冲突时以 `memory-bank/` 为准。
-- 开发即移动：某个候选需求一旦决定按 `WORKFLOW.md` 进入开发，将对应文档移动到 `docs/develops/<需求目录>/prd.md`，再拆成可独立验证的 `task.json` 任务；稳定结论再固化进 `memory-bank/`。
-- 不维护进度：本目录不维护任务状态、验收证据或开发日志。
+- 默认落点：brainstorming skill 产出的规格文档默认放在 `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md`。
+- 开发即复制：某个候选需求一旦决定按 `WORKFLOW.md` 进入开发，将对应 spec 内容复制到 `docs/develops/<需求目录>/prd.md` 或对应开发文档，再拆成可独立验证的 `task.json` 任务；稳定结论再固化进 `memory-bank/`。
+- 只留引用：候选规格进入开发后，原 `docs/superpowers/specs/<spec>.md` 只保留指向 `docs/develops/<需求目录>/` 的引用，不继续维护任务状态、验收证据或开发进度。
 - 尽量中文：新增需求分析、设计草案和 PRD 候选尽量使用中文；命令、路径、接口字段、事件名和状态值保留原文。
 
 ## 当前内容
 
-暂无候选规格。已进入开发工作流的需求应查看 `docs/develops/`。
+候选规格位于 `docs/superpowers/specs/`。已进入开发工作流的需求应查看 `docs/develops/`。
 """
 
 
@@ -425,7 +426,7 @@ MEMORY_BANK_FILES = {
 ## 读取规则
 
 - 默认不要读取 `docs/superpowers/` 或 `docs/archive/`。
-- `docs/superpowers/` 只保存尚未进入开发工作流的候选需求、设计草案和点子。
+- `docs/superpowers/specs/` 只保存尚未进入开发工作流的候选需求、设计草案和点子。
 - `docs/archive/` 只保存历史资料；历史资料不能覆盖本目录、当前代码或测试中的事实。
 - 如果本目录与当前代码明显冲突，先判断哪一边过时；修正事实源后再改实现。
 """,
@@ -445,7 +446,7 @@ TODO：用稳定的项目语言描述 2-5 个核心工作流。
 
 ## 已实现能力
 
-TODO：只记录已经存在并可验证的能力。候选需求和未来想法放到 `docs/superpowers/`。
+TODO：只记录已经存在并可验证的能力。候选需求和未来想法放到 `docs/superpowers/specs/`。
 
 ## 非目标
 
@@ -543,8 +544,9 @@ AGENTS_BLOCK = f"""{AGENTS_START}
 ## Svenstar Workflow Installer
 
 - 默认使用轻量模式：小修小改不创建开发目录，不写开发日志，必要记录交给 git diff / commit message。
-- `docs/superpowers/` 只用于存放尚未进入开发工作流的候选需求、设计草案、PRD 候选和点子；默认不读，只有用户明确点名或明确要推进为开发任务时才读取。
-- `docs/superpowers/` 中的内容只能视为候选方案，不得直接当作当前需求执行；要采纳时先按 `WORKFLOW.md` 固化范围，必要时迁入 `docs/develops/`。
+- `docs/superpowers/specs/` 只用于存放尚未进入开发工作流的候选需求、设计草案、PRD 候选和点子；默认不读，只有用户明确点名或明确要推进为开发任务时才读取。
+- `docs/superpowers/specs/` 中的内容只能视为候选方案，不得直接当作当前需求执行；要采纳时先按 `WORKFLOW.md` 固化范围，把内容复制到 `docs/develops/<需求目录>/prd.md` 或对应开发文档中。
+- 候选规格进入开发后，原 `docs/superpowers/specs/<spec>.md` 只保留指向 `docs/develops/<需求目录>/` 的引用，不继续维护任务状态、验收证据或开发进度。
 - 长任务模式按 `WORKFLOW.md` 执行：使用 `docs/develops/current.json` 定位活跃需求或阶段目录，并更新 `docs/develops/<active>/current.md`。
 - 如果用户没有明确要求长任务模式，但需求预计跨多个会话、超过 3 个可验证任务或跨前后端/API/数据库/架构，先询问是否进入长任务模式。
 - 长任务模式中 task 进入 `done` 后必须 git commit；阶段切换前如已有可验证成果，也要先 commit。
