@@ -25,8 +25,8 @@ python3 /path/to/skill/scripts/develop_workflow.py new-phase "phase name"
 
 Command behavior:
 
-- `install`: First-time setup. Creates `WORKFLOW.md`, `docs/develops/current.json`, `docs/develops/task.schema.json`, `docs/develops/_template/*`, and merges a managed block into `AGENTS.md`. Does not overwrite existing files unless `--force`.
-- `update`: Refreshes managed workflow files. Preserves the custom section inside `WORKFLOW.md` and preserves non-managed `AGENTS.md` content.
+- `install`: First-time setup. Creates `WORKFLOW.md`, `docs/develops/current.json`, `docs/develops/task.schema.json`, `docs/develops/_template/*`, `docs/superpowers/README.md`, missing `memory-bank/*.md` starter files, and merges a managed block into `AGENTS.md`. Does not overwrite existing files unless `--force`; `docs/superpowers/README.md` and `memory-bank/*.md` are only created when missing.
+- `update`: Refreshes managed workflow files. Preserves the custom section inside `WORKFLOW.md` and preserves non-managed `AGENTS.md` content. Also fills in missing `docs/superpowers/README.md` and `memory-bank/*.md` starter files without overwriting project-specific content.
 - `check`: Reports missing files and whether `AGENTS.md` contains the managed workflow block.
 - `new-feature <name>`: Creates `docs/develops/YYYY-MM-DD-slug/` from templates and updates `docs/develops/current.json` to point at the demand root.
 - `new-phase <name>`: Creates `docs/develops/<feature>/<phase-slug>/` from templates and updates `docs/develops/current.json` to point at that phase directory. If `--feature` is omitted, it uses the current active demand root.

@@ -127,25 +127,25 @@ docs/develops/
 {{
   "tasks": [
     {{
-      "id": "collector-phase2-query",
-      "title": "补齐 Phase 2 query",
-      "phase": "collector-phase2",
-      "description": "让 CLI 能查询 funding/OI/taker/long-short 本地数据。",
+      "id": "resource-list-query",
+      "title": "补齐资源列表查询",
+      "phase": "api-query",
+      "description": "让 CLI 或 API 能查询核心资源列表。",
       "status": "todo",
-      "depends_on": ["collector-phase2-db"],
+      "depends_on": ["resource-schema"],
       "acceptance": [
-        "CLI 可查询 funding/OI/taker/long-short",
+        "CLI 或 API 可查询资源列表",
         "正常路径和空数据都有测试覆盖"
       ],
       "verification": [
-        "cd backend && .venv/bin/python -m pytest tests/test_collector_query.py"
+        "cd backend && .venv/bin/python -m pytest tests/test_resource_query.py"
       ],
       "steps": [
-        "扩展 query service",
-        "补齐 CLI 参数",
+        "扩展 query service 或 API service",
+        "补齐入口参数",
         "补测试并运行验证"
       ],
-      "notes": "不改 HTTP API 契约",
+      "notes": "改公开契约前先同步 memory-bank/api-contract.md",
       "evidence": []
     }}
   ]
@@ -228,7 +228,7 @@ review -> in_progress | done
 
 默认采用测试先行：
 
-- 改行为、修 bug、扩 API/client、调整采集/回测/扫描逻辑时，优先先写测试或测试草案，再写实现。
+- 改行为、修 bug、扩 API/client、调整后台任务、数据处理或核心业务流程时，优先先写测试或测试草案，再写实现。
 - 新测试应先表达预期行为和边界条件；能跑出失败更好，但不要求为了形式主义制造红灯。
 - 允许先实现再补测试的例外：纯文档任务、机械重命名、探索性 spike、测试锚点缺失且需要先定位边界、或用户明确要求快速原型。
 - 使用例外时，必须在任务 `evidence` 或交接备注中说明原因和补上的验证方式。
@@ -307,7 +307,7 @@ review -> in_progress | done
 
 
 TASK_SCHEMA = {
-    "title": "Crypto Radar Task List",
+    "title": "Develop Workflow Task List",
     "type": "object",
     "additionalProperties": False,
     "required": ["tasks"],
@@ -390,6 +390,153 @@ CURRENT_TEMPLATE = """# Current
 - 完整验收条件、验证命令和证据以同目录 `task.json` 为准。
 - 跨阶段长期有效的信息优先更新到稳定文档或下一阶段目录，不在这里维护 append-only 日志。
 """
+
+SUPERPOWERS_README = """# Superpowers（候选需求与设计草案）
+
+本目录放有价值但尚未进入开发工作流的需求分析、设计草案、PRD 候选和点子。它们不是当前事实，也不是历史归档，而是将来也许会做的备选方案，或刚完成讨论但尚未启动开发的候选规格。
+
+## 规则
+
+- 默认不读：AI 默认不读本目录，只有用户明确点名某份文档时才读。
+- 不驱动开发：本目录内容不构成当前需求或契约；与 `memory-bank/` 冲突时以 `memory-bank/` 为准。
+- 开发即移动：某个候选需求一旦决定按 `WORKFLOW.md` 进入开发，将对应文档移动到 `docs/develops/<需求目录>/prd.md`，再拆成可独立验证的 `task.json` 任务；稳定结论再固化进 `memory-bank/`。
+- 不维护进度：本目录不维护任务状态、验收证据或开发日志。
+- 尽量中文：新增需求分析、设计草案和 PRD 候选尽量使用中文；命令、路径、接口字段、事件名和状态值保留原文。
+
+## 当前内容
+
+暂无候选规格。已进入开发工作流的需求应查看 `docs/develops/`。
+"""
+
+
+MEMORY_BANK_FILES = {
+    "README.md": """# Memory Bank
+
+本目录保存项目当前事实源。AI 理解项目现状时应优先读取这里，而不是历史归档、候选需求或开发流水账。
+
+## 默认可读
+
+- `product.md`：当前产品定位、用户、使用场景和已实现能力。
+- `tech-stack.md`：当前技术栈、运行入口、依赖管理和测试命令。
+- `api-contract.md`：当前 API、数据结构、错误格式和前后端契约。
+- `architecture.md`：当前架构、模块边界、依赖方向和关键实现事实。
+- `deployment.md`：当前部署、运行、运维、排障和环境变量信息。
+
+## 读取规则
+
+- 默认不要读取 `docs/superpowers/` 或 `docs/archive/`。
+- `docs/superpowers/` 只保存尚未进入开发工作流的候选需求、设计草案和点子。
+- `docs/archive/` 只保存历史资料；历史资料不能覆盖本目录、当前代码或测试中的事实。
+- 如果本目录与当前代码明显冲突，先判断哪一边过时；修正事实源后再改实现。
+""",
+    "product.md": """# Product
+
+## 产品定位
+
+TODO：说明这个项目解决什么问题、面向哪些用户、哪些能力已经稳定存在。
+
+## 目标用户
+
+TODO：列出主要用户、使用场景和非目标用户。
+
+## 主要使用场景
+
+TODO：用稳定的项目语言描述 2-5 个核心工作流。
+
+## 已实现能力
+
+TODO：只记录已经存在并可验证的能力。候选需求和未来想法放到 `docs/superpowers/`。
+
+## 非目标
+
+TODO：记录明确不做的范围，避免后续需求误扩。
+""",
+    "tech-stack.md": """# Tech Stack
+
+## Runtime
+
+TODO：记录语言版本、包管理器、主要运行入口和本地开发方式。
+
+## Backend
+
+TODO：记录后端框架、数据库、任务队列、CLI、爬虫、外部服务等事实。
+
+## Frontend
+
+TODO：记录前端框架、构建工具、UI 库、状态管理和测试工具等事实。
+
+## Common Commands
+
+```bash
+# TODO：安装依赖
+# TODO：运行后端测试
+# TODO：运行前端构建或测试
+```
+
+## Notes
+
+TODO：记录依赖管理、脚本职责、环境变量和本地运行约束。
+""",
+    "api-contract.md": """# API Contract
+
+## 基本约定
+
+TODO：记录 API base path、认证方式、请求格式、错误格式、分页、时间和数值精度约定。
+
+## 数据结构
+
+TODO：记录前后端共享的核心类型。字段名、枚举值和可空性必须与代码一致。
+
+## Endpoints
+
+TODO：按 endpoint 记录 method、path、query/body、response 和错误情况。
+
+## 变更规则
+
+- 修改公开请求字段、响应字段、错误格式或语义前，先更新本文件。
+- 同步更新后端实现、前端 client/types 和测试。
+""",
+    "architecture.md": """# Architecture
+
+## Top Level
+
+TODO：描述仓库顶层目录和职责边界。
+
+## Module Boundaries
+
+TODO：记录核心模块、依赖方向和禁止跨层调用的规则。
+
+## Data Flow
+
+TODO：描述主要数据流、状态流和关键持久化边界。
+
+## Important Decisions
+
+TODO：记录当前仍有效的架构决策。历史方案放到 `docs/archive/`。
+
+## Operational Notes
+
+TODO：记录影响运行、排障、数据迁移或兼容性的实现事实。
+""",
+    "deployment.md": """# Deployment
+
+## Environments
+
+TODO：记录本地、测试、生产等环境差异。
+
+## Configuration
+
+TODO：记录必需环境变量、配置文件位置和敏感信息处理方式。不要写真实 secret。
+
+## Runbook
+
+TODO：记录启动、停止、迁移、备份、恢复、健康检查和常见排障步骤。
+
+## Scheduled Jobs
+
+TODO：记录定时任务、后台任务和手动运维命令。
+""",
+}
 
 
 AGENTS_BLOCK = f"""{AGENTS_START}
@@ -518,6 +665,9 @@ def install_or_update(root: Path, *, force: bool, update: bool) -> list[str]:
     actions.append(write_json(root / "docs/develops" / "task.schema.json", TASK_SCHEMA, force=force or update))
     actions.append(write_json(root / "docs/develops" / "_template" / "task.json", TASK_TEMPLATE, force=force or update))
     actions.append(write_text(root / "docs/develops" / "_template" / "current.md", CURRENT_TEMPLATE, force=force or update))
+    actions.append(write_text(root / "docs/superpowers" / "README.md", SUPERPOWERS_README, force=False))
+    for filename, content in MEMORY_BANK_FILES.items():
+        actions.append(write_text(root / "memory-bank" / filename, content, force=False))
     if update or force:
         actions.append(remove_path(root / "docs/develops" / "_template" / "progress.md"))
 
@@ -534,6 +684,13 @@ def check(root: Path) -> int:
         "docs/develops/task.schema.json",
         "docs/develops/_template/task.json",
         "docs/develops/_template/current.md",
+        "docs/superpowers/README.md",
+        "memory-bank/README.md",
+        "memory-bank/product.md",
+        "memory-bank/tech-stack.md",
+        "memory-bank/api-contract.md",
+        "memory-bank/architecture.md",
+        "memory-bank/deployment.md",
     ]
     deprecated = ["docs/develops/_template/progress.md"]
     missing = [path for path in required if not (root / path).exists()]
