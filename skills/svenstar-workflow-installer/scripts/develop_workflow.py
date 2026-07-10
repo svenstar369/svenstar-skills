@@ -15,65 +15,201 @@ AGENTS_START = "<!-- SVENSTAR_DEVELOP_WORKFLOW_START -->"
 AGENTS_END = "<!-- SVENSTAR_DEVELOP_WORKFLOW_END -->"
 
 
-WORKFLOW_MD = f"""# Task 工作流
+WORKFLOW_MD = f"""# Workflow
 
-本文件定义两套协作模式。默认使用轻量模式；只有长任务才启用 `docs/develops/` 目录和任务状态机，完成后一定要 git 提交。
+本文件只定义仓库的当前推荐工作流。
+
+核心原则只有两条：
+
+- **小任务、小 bug**：直接修改，做最小但充分的验证。
+- **复杂长任务**：使用 skill 驱动流程，先设计、再计划、再执行。
 
 ## 模式选择
 
 默认使用轻量模式。
 
-只有满足以下任一条件时，才进入长任务模式：
+如果任务满足下面大多数特征，就按简单任务处理：
 
-- 用户明确要求按 `WORKFLOW.md`、`task.json`、拆任务或长期工作流执行。
+- 修改范围小
+- 单个会话内可以收口
+- 不跨多个子系统
+- 不需要 spec / plan 才能安全推进
+- 不值得拆成多个独立 task
+
+简单任务的工作方式是：
+
+1. 读取必要上下文
+2. 直接修改
+3. 补或更新测试
+4. 运行最小必要验证
+5. 用户要求时再提交
+
+一句话：**小任务直接改，不进入长流程。**
+
+## 长任务定义
+
+只要满足以下任一条件，就应视为复杂长任务：
+
+- 用户明确要求走工作流
 - 需求预计跨多个会话。
-- 需求需要 3 个以上可独立验证任务。
-- 需求跨前端、后端、API 契约、数据库或架构文档。
+- 需求超过 3 个可验证任务。
+- 需求跨前端、后端、API、数据库、架构或运维入口。
+- 任务需要明确设计和边界澄清。
+- 任务风险较高，值得分阶段 review。
 - 当前改动需要长期上下文交接。
 
-如果用户没有明确要求长任务模式，但 agent 判断复杂度超过上述阈值，必须先询问用户是否进入长任务模式；不要自动创建 `docs/develops/<需求目录>/`。
+如果用户没有明确要求，但复杂度已经达到这个级别，先询问用户是否进入长任务流程。
 
-## 需求分析与 PRD 候选
+## 长任务标准流程
 
-当用户要求先讨论、grill、brainstorming 或设计一个需求，但尚未明确要求开始开发时：
+复杂长任务统一走下面这条流程：
 
-- 可以先把确认后的需求分析 / 设计 / PRD 候选写到 `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md`，内容尽量使用中文；这是 brainstorming skill 的默认规格文档落点。
-- `docs/superpowers/specs/` 只承载尚未进入开发工作流的候选规格，不维护任务状态、进度或验收日志。
-- 不因为写了 `docs/superpowers/specs/` 文档就自动进入长任务模式，也不要自动创建 `docs/develops/<需求目录>/`。
-- 用户明确指定“开发这个需求”、要求按 `WORKFLOW.md` 执行，或确认进入长任务模式后，将对应候选规格内容复制到 `docs/develops/<需求目录>/prd.md`，作为该需求的 PRD / 设计依据。
-- 复制后，原 `docs/superpowers/specs/<spec>.md` 只保留指向 `docs/develops/<需求目录>/` 的引用；`docs/develops/<需求目录>/task.json` 承载任务状态，`current.md` 承载轻量接手上下文，不要继续在 `docs/superpowers/specs/` 维护该需求的进度。
+1. `brainstorming`
+2. `writing-plans`
+3. `subagent-driven-development`（推荐）
+4. `executing-plans`（降级方案）
 
-## 轻量模式
+## 第一步：brainstorming
 
-适用于明确的小修小改，例如修一个 bug、改一处 UI、调整一段小逻辑、补一个小测试。
+长任务开始时，先使用 `brainstorming`。
 
-轻量模式规则：
+### 目的
 
-- 不创建 `docs/develops/<需求目录>/`。
-- 不维护 `task.json`、`current.md`。
-- 不写开发日志；需要记录时依赖 git diff、测试输出和 commit message。
-- 仍需读取必要的稳定文档和相关代码，不做无上下文修改。
-- 改行为时优先补测试或更新测试。
-- 完成后运行最小必要验证；无法运行时说明原因。
+- 理解需求目标
+- 收集约束和成功标准
+- 澄清边界
+- 提出 2 到 3 个可选方案
+- 形成经过用户确认的 spec
 
-## 长任务模式
+### 要求
+
+- 在任何实现动作之前完成
+- 设计文档写入 `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md`
+- spec 写完后先做自检
+- 然后让用户 review 并确认
+- spec 未确认前，禁止进入实现
+
+一句话：**先把“做什么、为什么这样做”说清楚。**
+
+## 第二步：writing-plans
+
+spec 经过用户确认后，进入 `writing-plans`。
+
+### 目的
+
+- 把 spec 变成可执行的 implementation plan
+- 明确文件范围
+- 把任务拆成可验证的小 task
+- 明确验证命令和提交节奏
+
+### 要求
+
+- 计划文档写入 `docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md`
+- plan 必须自检：
+  - spec coverage
+  - placeholder scan
+  - type consistency
+- plan 完成后，进入执行选择：
+  - `subagent-driven-development`（推荐）
+  - `executing-plans`（降级）
+
+一句话：**把“怎么做”拆成工程上可执行的任务。**
+
+## 第三步：什么时候开 subagent
+
+只有当任务“**足够大、能拆开、值得逐任务 review**”时，才应该开 subagent。
+
+### 应该开 subagent 的场景
+
+- 已经进入长任务流程
+- 已经有明确 spec 和 plan
+- 任务可以拆成边界清晰的多个子任务
+- 每个子任务有相对独立的文件范围或职责边界
+- 任务风险较高，值得在 task 之间 review
+- 主会话不适合同时背太多实现上下文
+
+典型例子：
+
+- 配置层统一
+- CLI 入口统一
+- 并行 worker 改造
+- 测试迁移
+- 文档 / memory-bank / README 同步
+- crawler / 登录态 / 调度 / 状态流转等高风险改动
+
+### 不应该开 subagent 的场景
+
+- 小任务、小 bug、小文案修改
+- 需求还没想清楚，连 spec 都没有
+- 子任务之间强耦合，拆开反而更乱
+- 只是读代码、回答问题、查一个小问题
+- 任务过小，分派成本高于直接修改
+
+### 判断口诀
+
+- 简单任务：直接改
+- 复杂但还没定方案：先 `brainstorming`
+- 方案定了：`writing-plans`
+- plan 定了且任务可拆：优先开 subagent
+- plan 定了但不能拆或环境不支持：`executing-plans`
+
+## 第四步：执行阶段
+
+### 首选：subagent-driven-development
+
+当满足以下条件时，执行阶段默认使用 `subagent-driven-development`：
+
+- 平台支持 subagent
+- plan 已经写好
+- 任务可以按 task 切分
+- 每个 task 都值得单独 review
+
+执行要求：
+
+- 一个 task 一个执行单元
+- task 完成后做 review
+- 不让多个实现 subagent 并行修改同一写入范围
+- 持续推进，不在每个小步骤后都停下来征求继续许可
+
+### 降级：executing-plans
+
+只有满足以下任一条件时，才使用 `executing-plans`：
+
+- 当前环境不支持 subagent
+- 任务虽长，但高度耦合，不适合拆分
+- 用户明确要求 inline execution
+
+执行要求：
+
+- 先 review plan，再执行
+- 严格按 plan 推进
+- 遇到 blocker 立即停下并提问
+- 不跳过验证
+
+一句话：**有条件时优先 subagent，没有条件再用 executing-plans。**
+
+## 执行状态目录
+
+`docs/superpowers/` 负责设计和计划；真正开始实现后，再使用 `docs/develops/` 保存当前执行状态。
+
+只有 spec 已确认、plan 已写好、并且用户已经要求开始实现时，才创建 `docs/develops/<需求目录>/`。
 
 长任务模式使用 `docs/develops/current.json` 指向唯一活跃目录。这个目录可以是需求根目录，也可以是某个阶段子目录。
 
 新会话进入长任务模式时：
 
-1. 读取稳定文档：`memory-bank/product.md`、`memory-bank/tech-stack.md`、`memory-bank/api-contract.md`、`memory-bank/architecture.md`。
-2. 读取 `docs/develops/current.json`。
-3. 进入 `docs/develops/<active>/`。
-4. 只读取该目录下的 `task.json` 和 `current.md`。
-5. 不读取其他 `docs/develops/` 历史目录，除非用户明确要求追溯；追溯时按日期、需求 slug、任务 id 或关键词局部搜索。
+1. 读取稳定文档：`memory-bank/product.md`、`memory-bank/tech-stack.md`、`memory-bank/api-contract.md`、`memory-bank/architecture.md`
+2. 读取 `docs/develops/current.json`
+3. 进入 `docs/develops/<active>/`
+4. 只读取该目录下的 `task.json` 和 `current.md`
+5. 不读取其他 `docs/develops/` 历史目录，除非用户明确要求追溯
 
 `docs/develops/current.json` 示例：
 
 ```json
 {{
-  "active": "2026-06-03-altcoin-momentum/p3-hypotheses",
-  "updated_at": "2026-06-03",
+  "active": "2026-07-09-feature-slug/phase-slug",
+  "updated_at": "2026-07-09",
   "status": "in_progress"
 }}
 ```
@@ -83,14 +219,12 @@ WORKFLOW_MD = f"""# Task 工作流
 ```json
 {{
   "active": null,
-  "updated_at": "2026-06-03",
+  "updated_at": "2026-07-09",
   "status": "idle"
 }}
 ```
 
 ## 长任务目录结构
-
-每个大需求使用一个根目录；需要拆阶段时，阶段目录直接挂在根目录下：
 
 ```text
 docs/develops/
@@ -111,12 +245,12 @@ docs/develops/
 文件职责：
 
 - `docs/develops/current.json`：唯一活跃目录指针。`active` 可以直接指向需求根目录，也可以指向 `<阶段>/` 子目录。
-- `docs/develops/<需求>/prd.md`：该需求的 PRD / 设计依据；若该需求从 `docs/superpowers/specs/` 的候选规格进入开发，应复制对应候选规格内容而来，原 spec 只保留到本需求目录的引用。
+- `docs/develops/<需求>/prd.md`：该需求的 PRD / 设计依据。通常从已确认的 `docs/superpowers/specs/*.md` 复制而来，并可附上 `docs/superpowers/plans/*.md` 的引用。
 - `docs/develops/<需求>/task.json`：需求根目录级任务状态机。适合记录跨阶段任务，或不拆阶段时直接使用。
 - `docs/develops/<需求>/current.md`：需求根目录级轻量 handoff。适合记录大需求的总目标、当前阶段入口或跨阶段约束。
-- `docs/develops/<需求>/<阶段>/task.json`：该阶段自己的任务状态机。阶段任务尽量留在阶段目录，不再为每个阶段新建平级需求目录。
-- `docs/develops/<需求>/<阶段>/current.md`：该阶段自己的轻量 handoff。当前会话若聚焦某一阶段，`docs/develops/current.json` 应直接指向这里。
-- `docs/develops/task.schema.json`：`docs/develops/**/task.json` 的结构约束。新增或批量调整任务时必须保持 JSON 可校验。
+- `docs/develops/<需求>/<阶段>/task.json`：该阶段自己的任务状态机。
+- `docs/develops/<需求>/<阶段>/current.md`：该阶段自己的轻量 handoff。
+- `docs/develops/task.schema.json`：`docs/develops/**/task.json` 的结构约束。
 - `memory-bank/*.md`：稳定知识层。只放产品、技术栈、API 契约、架构和长期设计，不放开发流水账。
 
 ## Task 格式
@@ -159,7 +293,7 @@ docs/develops/
 - `depends_on`：前置任务 id。只在依赖已 `done` 时选择该任务。
 - `acceptance`：人工可判断的验收条件，描述“什么算完成”。
 - `verification`：必须执行或明确说明无法执行的验证命令、测试或检查。
-- `steps`：建议执行步骤，不等同于验收条件；必要时可随实现细化，但不要删除原始意图。
+- `steps`：建议执行步骤，不等同于验收条件。
 - `notes`：短备注，只写约束、风险或不做什么。
 - `evidence`：完成后记录关键验证证据，例如通过的测试命令或手动检查结果。
 
@@ -184,121 +318,79 @@ review -> in_progress | done
 
 禁止事项：
 
-- 禁止因为“代码写完了”直接标记 `done`。
-- 禁止测试失败仍标记 `done`。
-- 禁止用 `current.md` 里的描述覆盖 `task.json` 状态。
-- 禁止把无关本地改动混进同一个 task 提交。
+- 禁止因为“代码写完了”直接标记 `done`
+- 禁止测试失败仍标记 `done`
+- 禁止用 `current.md` 里的描述覆盖 `task.json` 状态
+- 禁止把无关本地改动混进同一个 task 提交
 
-## 长任务执行流程
+## 验证规则
 
-### 1. 初始化上下文
+无论是简单任务还是长任务，都遵守下面这些规则：
 
-写代码前读取：
+- 改行为时优先补测试或更新测试
+- 遵循 `AGENTS.md` 和仓库现有模式
+- 保持小 diff，不顺手做无关重构
+- 运行最小但充分的验证
+- 若验证无法运行，必须明确说明原因
+- 不要在验证失败时宣称完成
 
-- `memory-bank/product.md`
-- `memory-bank/tech-stack.md`
-- `memory-bank/api-contract.md`
-- `memory-bank/architecture.md`
-- `docs/develops/current.json`
-- `docs/develops/<active>/current.md`
-- `docs/develops/<active>/task.json`
+## 文档同步规则
 
-如果任务涉及 API 字段、响应格式、错误格式或公开行为，先更新 `memory-bank/api-contract.md`，再改实现和测试。
+如果本次改动影响以下内容，必须同步更新对应文档：
 
-### 2. 选择任务
+- 命令
+- 脚本
+- 公开行为
+- 运维步骤
+- 调度方式
+- 排障方式
+- 架构边界
 
-默认选择 1 个任务；只有强相关且能同一轮独立验证时才选择 2 个。
+需要同步检查的文档通常包括：
 
-优先选择：
+- `README.md`
+- `memory-bank/*.md`
+- deployment / runbook 文档
+- 示例命令
 
-- `status=todo` 或可继续推进的 `status=review`。
-- `depends_on` 全部为 `done`。
-- 30 到 90 分钟内能形成可验证增量。
-- 输入输出清晰，改动范围可控。
-- 与当前代码上下文强相关。
+如果影响产品定位、技术栈、API 契约、架构事实，必须同步更新对应 `memory-bank/*.md`。
 
-避免选择：
+## 提交规则
 
-- 前置依赖未完成的任务。
-- 验收条件不清晰的任务。
-- 改动范围横跨多个无关模块的任务。
-- 高风险但缺少测试锚点的任务。
+### 简单任务
 
-### 3. 测试先行与实现
+- 只有用户明确要求提交时才创建 commit
 
-默认采用测试先行：
+### 长任务
 
-- 改行为、修 bug、扩 API/client、调整后台任务、数据处理或核心业务流程时，优先先写测试或测试草案，再写实现。
-- 新测试应先表达预期行为和边界条件；能跑出失败更好，但不要求为了形式主义制造红灯。
-- 允许先实现再补测试的例外：纯文档任务、机械重命名、探索性 spike、测试锚点缺失且需要先定位边界、或用户明确要求快速原型。
-- 使用例外时，必须在任务 `evidence` 或交接备注中说明原因和补上的验证方式。
+- task 形成清晰、可验证成果后应提交
+- 阶段性成果在进入下一阶段前应先提交
+- commit 只包含当前任务相关文件
+- 存在无关本地改动时，不要一起提交
+- 验证失败时不要提交，除非用户明确要求保存 WIP
+- 不要 amend 旧提交，除非用户明确要求
 
-实现要求：
+## superpowers 读取规则
 
-- 遵循 `AGENTS.md` 和本仓库现有代码模式。
-- 保持小改动，禁止顺手重构。
-- 改行为时补测试或更新测试。
+- 默认**不要**读取 `docs/superpowers/`
+- `docs/superpowers/specs/`：候选需求与设计草案，通常由 `brainstorming` 产出
+- `docs/superpowers/plans/`：实现计划，通常由 `writing-plans` 产出
+- 只有用户明确点名，或确认要把某个候选需求推进为实现时才读
+- `docs/superpowers/` 内容不能直接当作当前事实或当前需求执行；与 `memory-bank/` 冲突时以 `memory-bank/` 为准
 
-### 4. 验证
+## 最终执行判断
 
-进入 `done` 前必须检查任务的每条 `acceptance` 和 `verification`。
+实际工作时，按下面顺序判断：
 
-验证结果记录到 `evidence`：
-
-- 写明实际运行的命令和结果。
-- 如果某个验证无法运行，写明原因、影响范围和替代检查。
-- 若验证失败，任务保持 `in_progress` 或 `blocked`，不要标记 `done`。
-
-### 5. 更新当前上下文
-
-任务完成后：
-
-- 将 `status` 改为 `done`。
-- 更新 `evidence`。
-- 更新 `docs/develops/<active>/current.md`，只保留当前焦点、卡点、下一步和少量接手备注。
-- 若完成一个 phase、改变架构或形成长期决策，同步更新 `memory-bank/architecture.md` 或新增 ADR。
-- 在标记 `done` 前检查本次需求是否影响使用或运维入口；如果影响命令、脚本、公开行为、调度方式、排障方式或架构边界，同步更新 `README.md`、相关 `memory-bank/*.md`、deployment/runbook 文档和示例命令。
-
-任务未完成但需要交接时：
-
-- 保持 `status=in_progress`、`review` 或 `blocked`。
-- 在 `docs/develops/<active>/current.md` 写清当前焦点、卡点和下一步。
-- 不要把完整开发过程写进 `current.md`。
-
-### 6. 阶段切换与瘦身
-
-当一个 phase 的全部任务进入 `done` 后：
-
-- 如需进入下一阶段，在同一需求根目录下创建 `<next-phase>/`，并把 `docs/develops/current.json.active` 切到新阶段目录。
-- 从当前活跃目录的 `task.json` 移除已经稳定完成且后续不会再改动的 `done` 任务，只保留接下来仍要推进的任务。
-- `current.md` 只保留下一位 agent 接手必须知道的近期状态；不额外维护 append-only 开发日志。
-- 跨阶段仍长期有效的结论，优先写入 `memory-bank/architecture.md`、相关设计文档，或下一阶段目录的 `current.md`。
-
-### 7. 提交规则
-
-轻量模式只有用户明确要求提交时才创建 commit。
-
-长任务模式强制提交：
-
-- 每个 task 进入 `done` 后必须创建 git commit。
-- 阶段切换前如果已经形成可验证阶段性成果，也应在切换前完成一次 git commit。
-- commit 只包含当前 task 或当前阶段相关文件。
-- commit message 应包含等价的范围、任务、验证、决策和遗留摘要。
-- 如果存在无关本地变更，禁止一并提交；先说明并只 stage 当前任务相关文件。
-- 如果验证失败或任务未 `done`，禁止提交，除非用户明确要求保存 WIP。
-- 不要 amend 旧提交，除非用户明确要求。
-
-推荐 commit message 格式：
-
-```text
-<phase/task>: <一句话结果>
-
-范围：...
-任务：...
-验证：...
-决策：...
-遗留：...
-```
+1. 是不是小任务？
+   是：直接改
+2. 是不是复杂长任务？
+   是：先 `brainstorming`
+3. spec 确认后：
+   进入 `writing-plans`
+4. 开始实现时：
+   - 能开 subagent：`subagent-driven-development`
+   - 不能开或不适合开：`executing-plans`
 
 ## Project Custom Notes
 
@@ -391,22 +483,48 @@ CURRENT_TEMPLATE = """# Current
 - 跨阶段长期有效的信息优先更新到稳定文档或下一阶段目录，不在这里维护 append-only 日志。
 """
 
-SUPERPOWERS_README = """# Superpowers（候选需求与设计草案）
+PRD_TEMPLATE = """# PRD
 
-本目录放有价值但尚未进入开发工作流的候选材料。需求分析、设计草案、PRD 候选和点子统一放在 `docs/superpowers/specs/`；它们不是当前事实，也不是历史归档，而是将来也许会做的备选方案，或刚完成讨论但尚未启动开发的候选规格。
+## 背景
+
+- TODO：说明为什么要做这件事。
+
+## 目标
+
+- TODO：列出本次实现的核心目标。
+
+## 非目标
+
+- TODO：明确本次不做什么，避免范围失控。
+
+## 设计依据
+
+- 来源 spec：`docs/superpowers/specs/...`
+- 来源 plan：`docs/superpowers/plans/...`
+
+## 备注
+
+- 本文件保存进入执行态后的需求依据；任务状态与验证证据写入同目录 `task.json`。
+"""
+
+SUPERPOWERS_README = """# Superpowers（候选需求、设计草案与实现计划）
+
+本目录放有价值但尚未成为当前事实源的候选材料。需求分析、设计草案、PRD 候选统一放在 `docs/superpowers/specs/`；实现计划统一放在 `docs/superpowers/plans/`。它们不是当前事实，也不是历史归档，而是将来也许会做的备选方案，或刚完成讨论但尚未彻底进入执行态的文档。
 
 ## 规则
 
 - 默认不读：AI 默认不读本目录，只有用户明确点名某份文档时才读。
 - 不驱动开发：本目录内容不构成当前需求或契约；与 `memory-bank/` 冲突时以 `memory-bank/` 为准。
-- 默认落点：brainstorming skill 产出的规格文档默认放在 `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md`。
-- 开发即复制：某个候选需求一旦决定按 `WORKFLOW.md` 进入开发，将对应 spec 内容复制到 `docs/develops/<需求目录>/prd.md` 或对应开发文档，再拆成可独立验证的 `task.json` 任务；稳定结论再固化进 `memory-bank/`。
-- 只留引用：候选规格进入开发后，原 `docs/superpowers/specs/<spec>.md` 只保留指向 `docs/develops/<需求目录>/` 的引用，不继续维护任务状态、验收证据或开发进度。
+- 默认落点：`brainstorming` skill 产出的规格文档默认放在 `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md`。
+- 计划落点：`writing-plans` skill 产出的计划文档默认放在 `docs/superpowers/plans/YYYY-MM-DD-<feature-name>.md`。
+- 开发前置：spec 未确认前，不开始实现；plan 未完成前，不进入执行态。
+- 开发即复制：某个候选需求一旦决定按 `WORKFLOW.md` 进入开发，将对应 spec 内容复制到 `docs/develops/<需求目录>/prd.md`，必要时在开发目录中补充 plan 引用，再拆成可独立验证的 `task.json` 任务；稳定结论再固化进 `memory-bank/`。
+- 只留参考：`docs/superpowers/` 里的 spec 和 plan 只保留设计与计划价值，不维护任务状态、验收证据或开发进度；这些状态放在 `docs/develops/`。
 - 尽量中文：新增需求分析、设计草案和 PRD 候选尽量使用中文；命令、路径、接口字段、事件名和状态值保留原文。
 
 ## 当前内容
 
-候选规格位于 `docs/superpowers/specs/`。已进入开发工作流的需求应查看 `docs/develops/`。
+候选规格位于 `docs/superpowers/specs/`，实现计划位于 `docs/superpowers/plans/`。已进入开发工作流的需求应查看 `docs/develops/`。
 """
 
 
@@ -427,6 +545,7 @@ MEMORY_BANK_FILES = {
 
 - 默认不要读取 `docs/superpowers/` 或 `docs/archive/`。
 - `docs/superpowers/specs/` 只保存尚未进入开发工作流的候选需求、设计草案和点子。
+- `docs/superpowers/plans/` 只保存实现计划，不保存执行态进度。
 - `docs/archive/` 只保存历史资料；历史资料不能覆盖本目录、当前代码或测试中的事实。
 - 如果本目录与当前代码明显冲突，先判断哪一边过时；修正事实源后再改实现。
 """,
@@ -544,15 +663,21 @@ AGENTS_BLOCK = f"""{AGENTS_START}
 ## Svenstar Workflow Installer
 
 - 默认使用轻量模式：小修小改不创建开发目录，不写开发日志，必要记录交给 git diff / commit message。
-- `docs/superpowers/specs/` 只用于存放尚未进入开发工作流的候选需求、设计草案、PRD 候选和点子；默认不读，只有用户明确点名或明确要推进为开发任务时才读取。
-- `docs/superpowers/specs/` 中的内容只能视为候选方案，不得直接当作当前需求执行；要采纳时先按 `WORKFLOW.md` 固化范围，把内容复制到 `docs/develops/<需求目录>/prd.md` 或对应开发文档中。
-- 候选规格进入开发后，原 `docs/superpowers/specs/<spec>.md` 只保留指向 `docs/develops/<需求目录>/` 的引用，不继续维护任务状态、验收证据或开发进度。
-- 长任务模式按 `WORKFLOW.md` 执行：使用 `docs/develops/current.json` 定位活跃需求或阶段目录，并更新 `docs/develops/<active>/current.md`。
+- 长任务默认按 skill 驱动流程执行：`brainstorming -> writing-plans -> subagent-driven-development`，只有环境不支持或任务强耦合时才降级到 `executing-plans`。
+- `docs/superpowers/specs/` 只用于存放候选需求、设计草案、PRD 候选和点子；`docs/superpowers/plans/` 只用于存放实现计划；两者默认都不读，只有用户明确点名或明确要推进为开发任务时才读取。
+- `docs/superpowers/` 中的内容只能视为候选方案或计划，不得直接当作当前事实或当前需求执行；要采纳时先按 `WORKFLOW.md` 固化范围，把已确认的 spec 复制到 `docs/develops/<需求目录>/prd.md` 或对应开发文档中。
+- 进入执行态后，使用 `docs/develops/current.json` 定位活跃需求或阶段目录，并更新 `docs/develops/<active>/current.md` 与 `task.json`。
 - 如果用户没有明确要求长任务模式，但需求预计跨多个会话、超过 3 个可验证任务或跨前后端/API/数据库/架构，先询问是否进入长任务模式。
+- 不要在 spec 未确认或 plan 未完成时创建执行态目录，除非用户明确要求跳过设计阶段。
 - 长任务模式中 task 进入 `done` 后必须 git commit；阶段切换前如已有可验证成果，也要先 commit。
 - 长任务在标记完成前，必须检查并同步本次需求涉及的入口文档：优先看 `README.md`、相关 `memory-bank/*.md`、deployment/runbook 和示例命令；不要漏掉新增命令、脚本、公开行为和运维步骤。
 - `docs/develops/<active>/current.md` 只保留当前需求的接手上下文，写轻量备注，不写流水账。
 {AGENTS_END}"""
+
+
+def ensure_dir(path: Path) -> str:
+    path.mkdir(parents=True, exist_ok=True)
+    return f"ensure dir {path}"
 
 
 def repo_root(cwd: str | None) -> Path:
@@ -646,6 +771,10 @@ def copy_templates(root: Path, target: Path, *, force: bool) -> list[str]:
     return actions
 
 
+def write_feature_prd(target: Path, *, force: bool) -> str:
+    return write_text(target / "prd.md", PRD_TEMPLATE, force=force)
+
+
 def install_or_update(root: Path, *, force: bool, update: bool) -> list[str]:
     actions: list[str] = []
     workflow_path = root / "WORKFLOW.md"
@@ -667,6 +796,9 @@ def install_or_update(root: Path, *, force: bool, update: bool) -> list[str]:
     actions.append(write_json(root / "docs/develops" / "task.schema.json", TASK_SCHEMA, force=force or update))
     actions.append(write_json(root / "docs/develops" / "_template" / "task.json", TASK_TEMPLATE, force=force or update))
     actions.append(write_text(root / "docs/develops" / "_template" / "current.md", CURRENT_TEMPLATE, force=force or update))
+    actions.append(write_text(root / "docs/develops" / "_template" / "prd.md", PRD_TEMPLATE, force=force or update))
+    actions.append(ensure_dir(root / "docs/superpowers" / "specs"))
+    actions.append(ensure_dir(root / "docs/superpowers" / "plans"))
     actions.append(write_text(root / "docs/superpowers" / "README.md", SUPERPOWERS_README, force=False))
     for filename, content in MEMORY_BANK_FILES.items():
         actions.append(write_text(root / "memory-bank" / filename, content, force=False))
@@ -686,7 +818,10 @@ def check(root: Path) -> int:
         "docs/develops/task.schema.json",
         "docs/develops/_template/task.json",
         "docs/develops/_template/current.md",
+        "docs/develops/_template/prd.md",
         "docs/superpowers/README.md",
+        "docs/superpowers/specs",
+        "docs/superpowers/plans",
         "memory-bank/README.md",
         "memory-bank/product.md",
         "memory-bank/tech-stack.md",
@@ -728,6 +863,7 @@ def new_feature(root: Path, name: str, *, day: str | None, force: bool) -> list[
     ensure_templates(root)
     target.mkdir(parents=True, exist_ok=True)
     actions = copy_templates(root, target, force=force)
+    actions.append(write_feature_prd(target, force=force))
     actions.append(write_json(
         root / "docs/develops" / "current.json",
         {
